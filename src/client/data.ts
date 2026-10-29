@@ -4,7 +4,7 @@
  *
  * Expression data lives in ./expressions.json and is imported at build time.
  *
- * @module @edge-hh/dsh-grokbot-pet/client/data
+ * @module dsh-grokbot-pet/client/data
  */
 
 /** [id, displayName, hex] */

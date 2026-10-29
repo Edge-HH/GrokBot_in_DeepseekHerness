@@ -22,12 +22,19 @@ import { basename, dirname, resolve as resolvePath } from 'node:path'
 import { transform } from 'lightningcss'
 import type { UserConfig } from 'tsdown'
 
-const PACKAGE_NAME = '@edge-hh/dsh-grokbot-pet'
+const PACKAGE_NAME = 'dsh-grokbot-pet'
 
 /**
  * Browser platform modules the shell shares into its frozen module table;
  * must stay external so every plugin uses the single shared react/cordis
- * instances (kept in sync with deepseek-ai/dsh-client-web platform.ts).
+ * instances (kept in sync with the 0.1.x dsh-client-web platform table).
+ *
+ * 0.2.x shells (Web and Desktop) share a narrower table (`react`, `react-dom`,
+ * `@deepseek-ai/cordis`, `@deepseek-ai/dsh-client-store`,
+ * `@deepseek-ai/dsh-client-ui-slots`, `@deepseek-ai/dsh-client-ui-primitives`,
+ * `@tanstack/react-virtual`, `zod`, `@deepseek-ai/dsh-client-ui-dockkit`).
+ * This bundle only requires `react`, so the same artifact loads in both; the
+ * remaining names stay listed for older shells.
  */
 const PLATFORM_MODULES = [
   'react', 'react/jsx-runtime', 'react-dom', 'react-dom/client', '@deepseek-ai/cordis',

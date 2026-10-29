@@ -5,7 +5,7 @@
  * Reads session state from the reactive PetStateStore (no host polling).
  * GrokBot expression data is imported as a JSON module.
  *
- * @module @edge-hh/dsh-grokbot-pet/client/pet
+ * @module dsh-grokbot-pet/client/pet
  */
 import { createElement, useEffect, useLayoutEffect, useRef, useState, useCallback, useSyncExternalStore } from 'react'
 import type { PetStateStore, PetUsage } from './store.ts'
@@ -14,6 +14,7 @@ import {
   COLORS, SHAPES, PARTS, ACCESSORIES, DEFAULT_APPEARANCE,
   type AppearanceState,
 } from './data.ts'
+import { isDesktopApp, petTopLimit } from './platform.ts'
 // @ts-ignore — JSON module bundled at build time
 import rawData from './expressions.json'
 
@@ -382,9 +383,10 @@ function composerPos(): { x: number; y: number } | null {
   const w = typeof window !== 'undefined' ? window : null as any
   const vw = w == null ? 1200 : w.innerWidth
   const vh = w == null ? 800 : w.innerHeight
+  const top = petTopLimit()
   return {
     x: clamp(r.right - 84 - 8, 8, Math.max(8, vw - 92)),
-    y: clamp(r.top - 84 - 10, 8, Math.max(8, vh - 92)),
+    y: clamp(r.top - 84 - 10, top, Math.max(top, vh - 92)),
   }
 }
 
@@ -408,12 +410,16 @@ export function PetView({ store, ctx }: PetViewProps) {
     const w = typeof window !== 'undefined' ? window : null as any
     const vw = w == null ? 1200 : w.innerWidth
     const vh = w == null ? 800 : w.innerHeight
+    const top = petTopLimit()
     const saved = lsGet<{ x: number; y: number } | null>('pos', null)
     if (saved != null && typeof saved.x === 'number') {
-      return { x: clamp(saved.x, 0, Math.max(0, vw - 84)), y: clamp(saved.y, 0, Math.max(0, vh - 84)) }
+      return {
+        x: clamp(saved.x, 0, Math.max(0, vw - 84)),
+        y: clamp(typeof saved.y === 'number' ? saved.y : 0, top, Math.max(top, vh - 84)),
+      }
     }
     // 首次启动默认位置：对话输入框右上方；输入框尚未渲染时先落右下角兜底
-    return composerPos() ?? { x: Math.max(0, vw - 100), y: Math.max(0, vh - 130) }
+    return composerPos() ?? { x: Math.max(0, vw - 100), y: Math.max(top, vh - 130) }
   })
   const [visible, setVisible] = useState(() => lsGet<boolean>('visible', true))
   const [soundOn, setSoundOn] = useState(() => lsGet<boolean>('sound', true))
@@ -505,6 +511,25 @@ export function PetView({ store, ctx }: PetViewProps) {
 
   // Persist position
   useEffect(() => { lsSet('pos', pos) }, [pos])
+
+  // Desktop windows can be resized, maximized, or toggled fullscreen: keep the
+  // pet inside the new viewport and below the native titlebar chrome.
+  useEffect(() => {
+    const onResize = () => {
+      const vw = window.innerWidth, vh = window.innerHeight
+      const top = petTopLimit()
+      const next = {
+        x: clamp(posRef.current.x, 0, Math.max(0, vw - 84)),
+        y: clamp(posRef.current.y, top, Math.max(top, vh - 84)),
+      }
+      if (next.x !== posRef.current.x || next.y !== posRef.current.y) {
+        posRef.current = next
+        setPos(next)
+      }
+    }
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
 
   // 首次启动定位：输入框尚未渲染时等它出现，再归位到其右上方；用户一开始拖拽即放弃
   useEffect(() => {
@@ -633,7 +658,7 @@ export function PetView({ store, ctx }: PetViewProps) {
       let x = posRef.current.x + f.vx * dt
       let y = posRef.current.y + f.vy * dt
       const vw = window.innerWidth, vh = window.innerHeight
-      const minX = 8, maxX = Math.max(8, vw - 92), minY = 8, maxY = Math.max(8, vh - 92)
+      const minX = 8, maxX = Math.max(8, vw - 92), minY = petTopLimit(), maxY = Math.max(minY, vh - 92)
       if (x < minX) { x = minX; if (f.vx < 0) { f.vx = -f.vx * 0.7; if (Math.abs(f.vx) > 60) bounceFx() } }
       else if (x > maxX) { x = maxX; if (f.vx > 0) { f.vx = -f.vx * 0.7; if (Math.abs(f.vx) > 60) bounceFx() } }
       if (y < minY) { y = minY; if (f.vy < 0) { f.vy = -f.vy * 0.7; if (Math.abs(f.vy) > 60) bounceFx() } }
@@ -707,7 +732,11 @@ export function PetView({ store, ctx }: PetViewProps) {
     drag.moved = true
     const w = typeof window !== 'undefined' ? window as any : null
     const vw = w == null ? 1200 : w.innerWidth, vh = w == null ? 800 : w.innerHeight
-    const next = { x: clamp(drag.ox + dx, 0, Math.max(0, vw - 84)), y: clamp(drag.oy + dy, 0, Math.max(0, vh - 84)) }
+    const top = petTopLimit()
+    const next = {
+      x: clamp(drag.ox + dx, 0, Math.max(0, vw - 84)),
+      y: clamp(drag.oy + dy, top, Math.max(top, vh - 84)),
+    }
     posRef.current = next; setPos(next)
     const samples = dragSamplesRef.current
     samples.push({ t: performance.now(), x: ev.clientX, y: ev.clientY })
@@ -773,8 +802,9 @@ export function PetView({ store, ctx }: PetViewProps) {
   const toggleSound = () => { const next = !soundOnRef.current; soundOnRef.current = next; setSoundOn(next); lsSet('sound', next); if (next) { getAudio(); playSound('pet') } }
   const toggleNotify = () => {
     const N = notifyApi()
-    if (N == null) { flashNotice('此浏览器不支持桌面通知'); return }
-    if (N.permission === 'denied') { flashNotice('通知被浏览器阻止'); return }
+    const desktop = isDesktopApp()
+    if (N == null) { flashNotice(desktop ? '当前环境不支持系统通知' : '此浏览器不支持桌面通知'); return }
+    if (N.permission === 'denied') { flashNotice(desktop ? '通知被系统阻止' : '通知被浏览器阻止'); return }
     if (N.permission === 'granted') {
       const next = !notifyOnRef.current; notifyOnRef.current = next; setNotifyOn(next); lsSet('notify', next)
       if (next) sendNotification('DSH · 通知已开启', '请求开始/完成时发送通知', 'dsh-pet-hello')
@@ -782,7 +812,7 @@ export function PetView({ store, ctx }: PetViewProps) {
     }
     const done = (permission: string) => {
       if (permission === 'granted') { notifyOnRef.current = true; setNotifyOn(true); lsSet('notify', true); sendNotification('DSH · 通知已开启', '', 'dsh-pet-hello') }
-      else if (permission === 'denied') flashNotice('通知权限被拒绝')
+      else if (permission === 'denied') flashNotice(desktop ? '通知权限被系统拒绝' : '通知权限被拒绝')
     }
     try { const r = N.requestPermission(done); if (r != null && typeof r.then === 'function') r.then(done).catch(() => {}) } catch { flashNotice('无法请求通知权限') }
   }
@@ -945,7 +975,7 @@ function AppearancePanelInner({ variant = 'menu', onAction, soundOn, notifyOn, o
             onClick: () => onToggleSound?.(),
           }, createElement('b', null, soundOn ? '✓' : '—'), createElement('span', null, '音效')),
           createElement('button', {
-            type: 'button', title: '桌面通知（Chrome → Windows）', 'aria-pressed': String(notifyOn ?? false),
+            type: 'button', title: isDesktopApp() ? '桌面通知（系统通知）' : '桌面通知（Chrome → Windows）', 'aria-pressed': String(notifyOn ?? false),
             onClick: () => onToggleNotify?.(),
           }, createElement('b', null, notifyOn ? '✓' : '—'), createElement('span', null, '通知')),
           createElement('button', {

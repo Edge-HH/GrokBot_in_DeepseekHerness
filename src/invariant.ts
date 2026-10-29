@@ -1,13 +1,13 @@
 /**
- * Package-owned invariant companion for `@edge-hh/dsh-grokbot-pet`.
- * @module @edge-hh/dsh-grokbot-pet/invariant
+ * Package-owned invariant companion for `dsh-grokbot-pet`.
+ * @module dsh-grokbot-pet/invariant
  */
 
 /* jscpd:ignore-start */
 import type { Context } from '@deepseek-ai/cordis'
 import type { InvariantInstaller } from '@deepseek-ai/dsh-invariants'
 
-const PACKAGE_NAME = '@edge-hh/dsh-grokbot-pet'
+const PACKAGE_NAME = 'dsh-grokbot-pet'
 
 /** Cordis companion plugin name. */
 export const name = 'grokbot-pet-invariant'

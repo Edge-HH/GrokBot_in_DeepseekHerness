@@ -1,13 +1,13 @@
 {
-  "name": "@edge-hh/dsh-grokbot-pet",
-  "version": "2.0.1",
-  "description": "GrokBot desktop pet for DeepSeek Harness web GUI: draggable animated companion over the live conversation snapshot",
+  "name": "dsh-grokbot-pet",
+  "version": "2.1.0",
+  "description": "GrokBot desktop pet for DeepSeek Harness (Web GUI and Desktop app): draggable animated companion over the live conversation snapshot",
   "license": "MIT",
   "type": "module",
   "publishConfig": { "access": "public" },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Edge-HH/GrokBot_in_DeepseekHerness.git"
+    "url": "git+https://github.com/PAKIKNOWLEDGE/GrokBot_in_DeepseekHerness.git"
   },
   "main": "./lib/index.js",
   "exports": {
@@ -24,6 +24,7 @@
     "bundle": "npm run clean && tsdown",
     "build": "npm run clean && tsdown",
     "typecheck": "tsc -p tsconfig.json",
+    "test": "node --test tests/store.spec.ts tests/node-plugin.client.spec.ts",
     "prepare": "tsdown"
   },
   "dsh": {
@@ -40,18 +41,14 @@
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": ">=4.0.1 <5.0.0",
-    "@deepseek-ai/dsh-api-remotes": ">=0.0.1-rc.1 <0.1.0 || >=0.1.0-rc.1 <0.2.0-0",
-    "@deepseek-ai/dsh-client-runtime": ">=0.0.1-rc.1 <0.1.0 || >=0.1.0-rc.1 <0.2.0-0",
-    "@deepseek-ai/dsh-client-ui-slots": ">=0.0.1-rc.1 <0.1.0 || >=0.1.0-rc.1 <0.2.0-0",
-    "@deepseek-ai/dsh-invariants": ">=0.0.1-rc.1 <0.1.0 || >=0.1.0-rc.1 <0.2.0-0",
+    "@deepseek-ai/dsh-client-ui-slots": ">=0.0.1-rc.1 <0.3.0-0",
+    "@deepseek-ai/dsh-invariants": ">=0.0.1-rc.1 <0.3.0-0",
     "react": "^18.2.0"
   },
   "devDependencies": {
     "@deepseek-ai/cordis": ">=4.0.1 <5.0.0",
-    "@deepseek-ai/dsh-api-remotes": ">=0.0.1-rc.1 <0.1.0 || >=0.1.0-rc.1 <0.2.0-0",
-    "@deepseek-ai/dsh-client-runtime": ">=0.0.1-rc.1 <0.1.0 || >=0.1.0-rc.1 <0.2.0-0",
-    "@deepseek-ai/dsh-client-ui-slots": ">=0.0.1-rc.1 <0.1.0 || >=0.1.0-rc.1 <0.2.0-0",
-    "@deepseek-ai/dsh-invariants": ">=0.0.1-rc.1 <0.1.0 || >=0.1.0-rc.1 <0.2.0-0",
+    "@deepseek-ai/dsh-client-ui-slots": ">=0.0.1-rc.1 <0.3.0-0",
+    "@deepseek-ai/dsh-invariants": ">=0.0.1-rc.1 <0.3.0-0",
     "@types/react": "~18.3.1",
     "lightningcss": "^1.32.0",
     "react": "^18.2.0",

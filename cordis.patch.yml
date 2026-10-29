@@ -1,10 +1,12 @@
-# GrokBot 桌宠 —— dsh web 浏览器客户端插件行（bundle patch 层）。
+# GrokBot 桌宠 —— dsh 浏览器客户端插件行（bundle patch 层）。
 #
 # 本文件由 package.json 的 dsh.bundle.patch 声明，作为一层 patch 参与
-# profile 组合（如 `dsh plugin --profile web add <本仓库>`）。
+# profile 组合（网页版 `dsh plugin --profile web add <本仓库>`，桌面端
+# `dsh plugin --profile desktop add <本仓库>` 或 Desktop 的 Plugins 页面）。
 # 它在组合树中插入一条 dsh.client 客户端插件行：dsh-client-modules 的节点
 # 半段会扫描组合树并为每个 dsh.client 行提供 /plugins/<id>/client.js，
-# 浏览器内核据此把桌宠挂载进 shell.overlay / settings.section。
+# 浏览器内核（网页版与 Electron 桌面端共用）据此把桌宠挂载进
+# shell.overlay / settings.section。
 - insert:
     - id: ui-grokbot-pet
-      name: '@edge-hh/dsh-grokbot-pet'
+      name: 'dsh-grokbot-pet'
